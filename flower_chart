@@ -1,6 +1,5 @@
 /**
-Built in the Looker web IDE for Hack @ Home 2021 https://lookervisbuilder.com/
- * Welcome to the Looker Visualization Builder! Please refer to the following resources 
+ * Welcome to the Looker Visualization Builder! Please refer to the following resources
  * to help you write your visualization:
  *  - API Documentation - https://github.com/looker/custom_visualizations_v2/blob/master/docs/api_reference.md
  *  - Example Visualizations - https://github.com/looker/custom_visualizations_v2/tree/master/src/examples
@@ -13,12 +12,12 @@ const visObject = {
   **/
   options: {
     first_option: {
-    	type: "string",
+    type: "string",
       label: "My First Option",
       default: "Default Value"
     },
     second_option: {
-    	type: "number",
+    type: "number",
       label: "My Second Option",
       default: 42
     }
@@ -28,15 +27,15 @@ const visObject = {
   * The create function gets called when the visualization is mounted but before any
   * data is passed to it.
   **/
-	create: function(element, config){
-		element.innerHTML = "<h1>Ready to render!</h1>";
-	},
+create: function(element, config){
+element.innerHTML = "<h1>Ready to render!</h1>";
+},
 
  /**
   * UpdateAsync is the function that gets called (potentially) multiple times. It receives
   * the data and should update the visualization with the new data.
   **/
-	updateAsync: function(data, element, config, queryResponse, details, doneRendering){
+updateAsync: function(data, element, config, queryResponse, details, doneRendering){
     // set the dimensions and margins of the graph
     var margin = {top: 20, right: 20, bottom: 30, left: 40},
         width = 960 - margin.left - margin.right,
@@ -57,15 +56,15 @@ const visObject = {
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
       .append("g")
-        .attr("transform", 
+        .attr("transform",
               "translate(" + margin.left + "," + margin.top + ")");
-    
+   
     formattedData = []
 
     // format the data
     data.forEach(function(d) {
       formattedData.push({
-      	count: d["game.count"]["value"],
+      count: d["game.count"]["value"],
         friendly_class: d["game.friendly_class"]["value"],
         opponent_class: d["game.opponent_class"]["value"]
       });
@@ -73,72 +72,95 @@ const visObject = {
 
     // Scale the range of the data in the domains
     x.domain(formattedData.map(function(d) { return d.friendly_class; }));
-    y.domain([0, d3.max(formattedData, function(d) { return d.count; })*1.5]);
+    y.domain([600, d3.max(formattedData, function(d) { return d.count; })+5]);
 
-    
-    // append the "stems"
-    svg.selectAll(".myStem")
-      .data(formattedData)
-      .enter()
-      .append("rect")
+    // append the rectangles for the bar chart
+    svg.selectAll(".bar").data(formattedData)
+      .enter().append("rect")
       .attr("class", "bar")
-      .attr("style", "fill: #3D550C;")
-      .attr("x", function(d) { return x(d.friendly_class); })
-      .attr("width", 3)
+      .attr("style", "fill: #3D550C")
+      .attr("x", function(d) { return x(d.friendly_class)+40; })
+      .attr("width", x.bandwidth()/10)
       .attr("y", function(d) { return y(d.count); })
-      .attr("height", function(d) { return height - y(d.count); });     
-    
-    /*
-    // append the "stems"
-		svg.selectAll("myStem")
-  		.data(formattedData)
-  		.enter()
-  		.append("line")
-    	.attr("x1", function(d) { return x(d.friendly_class); })
-    	.attr("x2", function(d) { return x(d.friendly_class); })
-    	.attr("y1", function(d) { return y(d.count); })
-    	.attr("y2", y(0))
-    	.attr("stroke", "#3D550C")
-    */
+      .attr("height", function(d) { return height - y(d.count); });
+   
+       //get the mav value for each bar
+       var formattedDataMax = d3.nest()
+      .key(function(d) { return d.friendly_class; })
+      .rollup(function(v) { return {
+        value: d3.max(v, function(d) { return d.count; })
+      }; })
+      .entries(formattedData);
+    //console.log(JSON.stringify(formattedDataMax));
+   
+    //append the petals to the top of the bars
+     svg.selectAll(".data-circle").data(formattedDataMax)
+      .enter().append("circle")
+        .attr("fill", "#AE388B")
+        .attr("stroke", "none")
+        .attr("cx", function(d) { return x(d.key) + 32.5; })
+        .attr("cy", function(d) { return y(d.value.value)-10; })
+        .attr("r", 15);
+ 
+      //append the petals to the top of the bars
+      svg.selectAll(".data-circle").data(formattedDataMax)
+      .enter().append("circle")
+        .attr("fill", "#AE388B")
+        .attr("stroke", "none")
+        .attr("cx", function(d) { return x(d.key) + 57.5; })
+        .attr("cy", function(d) { return y(d.value.value)-10; })
+        .attr("r", 15);
+ 
+      //append the petals to the top of the bars
+      svg.selectAll(".data-circle").data(formattedDataMax)
+      .enter().append("circle")
+        .attr("fill", "#E983D8")
+        .attr("stroke", "none")
+        .attr("cx", function(d) { return x(d.key) + 32.5; })
+        .attr("cy", function(d) { return y(d.value.value)+5; })
+        .attr("r", 15);
+ 
+      //append the petals to the top of the bars
+      svg.selectAll(".data-circle").data(formattedDataMax)
+      .enter().append("circle")
+        .attr("fill", "#E983D8")
+        .attr("stroke", "none")
+        .attr("cx", function(d) { return x(d.key) + 57.5; })
+        .attr("cy", function(d) { return y(d.value.value)+5; })
+        .attr("r", 15);
+ 
+      //append the petals to the top of the bars
+      svg.selectAll(".data-circle").data(formattedDataMax)
+      .enter().append("ellipse")
+        .attr("fill", "#FFC0CB")
+        .attr("stroke", "none")
+        .attr("cx", function(d) { return x(d.key) + 45; })
+        .attr("cy", function(d) { return y(d.value.value)-12.5; })
+        .attr("rx", 15)
+  			.attr("ry", 20);
+ 
+     //append the circle to the top of the bars
+    svg.selectAll(".data-circle").data(formattedDataMax)
+      .enter().append("circle")
+        .attr("fill", "#870A30")
+        .attr("stroke", "#E983D8")
+        .attr("cx", function(d) { return x(d.key) + 45; })
+        .attr("cy", function(d) { return y(d.value.value); })
+        .attr("r", 10);
 
-        // append the ellipses
-		svg.selectAll("myEllipse")
-  		.data(formattedData)
-  		.enter()
-      .append("ellipse")
-    	.attr("cx", function(d) { return x(d.friendly_class); })
-    	.attr("cy", function(d) { return y(d.count); })
-    	.attr("rx", 8)
-    	.attr("ry", 4)
-    	.style("fill", "#3D550C")
-    	.attr("stroke", "black")
- /*   
-    // append the circles
-		svg.selectAll("mycircle")
-  		.data(formattedData)
-  		.enter()
-      .append("circle")
-    	.attr("cx", function(d) { return x(d.friendly_class); })
-    	.attr("cy", function(d) { return y(d.count); })
-    	.attr("r", "4")
-    	.style("fill", "#3D550C")
-    	.attr("stroke", "black")
-*/
-    
+
+
     // add the x Axis
     svg.append("g")
       .attr("transform", "translate(0," + height + ")")
-    	.style("fill", "#964B00")
       .call(d3.axisBottom(x));
-    
-
 
     // add the y Axis
     svg.append("g")
       .call(d3.axisLeft(y));
 
-		doneRendering()
-	}
+doneRendering()
+}
 };
 
 looker.plugins.visualizations.add(visObject);
